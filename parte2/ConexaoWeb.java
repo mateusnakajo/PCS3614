@@ -22,7 +22,7 @@ public class ConexaoWeb {
     String versao = ""; 			//String que guarda a versao do Protocolo.
     File arquivo; 				//Objeto para os arquivos que vao ser enviados. 
     String nomeArq; 				//String para o nome do arquivo.
-    String raiz = "/home/mateus/Documents/Redes/Trabalho1/PCS3614/parte2/html"; 				//String para o diretorio raiz.
+    String raiz = "/home/mateus/Documents/Redes/Trabalho1/PCS3614/parte2"; 				//String para o diretorio raiz.
   	String inicio;				//String para guardar o inicio da linha
   	String senha_user="";		//String para armazenar o nome e a senha do usuario
   	Date now = new Date();
@@ -41,7 +41,9 @@ public class ConexaoWeb {
 
       if(metodo.equals("GET")) {
         if(nomeArq.endsWith("/")) {
-          nomeArq += "index.html";
+          nomeArq += "html/index.html";
+        } else if (nomeArq.startsWith("/restrito")){
+          nomeArq += "/pagina.html";
         }
 
         ct = TipoArquivo(nomeArq);
@@ -57,13 +59,44 @@ public class ConexaoWeb {
           System.out.println("Nome arquivo: "+nomeArq);
           System.out.println("Versao: "+versao);
 
-          os.writeBytes("HTTP/1.0 200 OK\n");
-          os.writeBytes("Server: LocalHost\n");
-          os.writeBytes("MIME-version: 1.0\n");
-          os.writeBytes("Content-type: text/html\n");
-          os.writeBytes("Content-lenght: "+dadoString.length()+"\n\n");
-          os.writeBytes(dadoString);
-          
+          if (nomeArq.startsWith("/restrito")){
+            // Verifica se tem cabecalho de auth
+            Boolean autorizacao = false;
+            String req;
+            System.out.println("\n");
+            while ((req = in.readLine()) != null && !req.equals("")) {
+              System.out.println(req);
+              if (req.startsWith("Authorization")){
+                String senha = "d2VibWFzdGVyOnpcW1Hnhy=";
+                if ((req.substring(21)).equalsTo(senha)){
+                  autorizacao = true;
+                }
+              }
+            }
+            System.out.println("Auth:" + autorizacao + "\n");
+            if (!autorizacao) { // Tem autorizacao
+              os.writeBytes("HTTP/1.0 401 Unauthorized\n");
+              os.writeBytes("Server: LocalHost\n");
+              os.writeBytes("MIME-version: 1.0\n");
+              os.writeBytes("Content-type: text/html\n");
+              os.writeBytes("WWW-Authenticate: Basic realm='System Administrator'");
+              os.writeBytes("\n\n");
+            } else {// Ainda nao tem autorizacao
+              os.writeBytes("HTTP/1.0 200 OK\n");
+              os.writeBytes("Server: LocalHost\n");
+              os.writeBytes("MIME-version: 1.0\n");
+              os.writeBytes("Content-type: text/html\n");
+              os.writeBytes("Content-lenght: "+dadoString.length()+"\n\n");
+              os.writeBytes(dadoString);
+            }
+          } else {
+            os.writeBytes("HTTP/1.0 200 OK\n");
+            os.writeBytes("Server: LocalHost\n");
+            os.writeBytes("MIME-version: 1.0\n");
+            os.writeBytes("Content-type: text/html\n");
+            os.writeBytes("Content-lenght: "+dadoString.length()+"\n\n");
+            os.writeBytes(dadoString);
+          }
       		String str;
               while ((str = in.readLine()) != null && !str.equals("")) {
               	System.out.println(str);
