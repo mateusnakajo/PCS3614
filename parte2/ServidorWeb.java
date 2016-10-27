@@ -5,7 +5,7 @@ import java.util.*;
 public class ServidorWeb {
   public static void main(String[] args) {
     boolean DEBUG = true;
-    int porta = 3322; 		//porta aonde o servidor vai aguardar por pedido de conexao.
+    int porta = 3321; 		//porta aonde o servidor vai aguardar por pedido de conexao.
     ServerSocket sw; 	//Socket servidor
 	 
 	//de um valor para a porta!
