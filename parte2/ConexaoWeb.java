@@ -2,6 +2,9 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class ConexaoWeb {
     Socket socket;		//socket que vai tratar com o cliente.
@@ -20,6 +23,9 @@ public class ConexaoWeb {
 	String versao = "";	//String que guarda a versao do Protocolo.
 	File arquivo;		//Objeto para os arquivos que vao ser enviados. 
 	String nomeArq;		//String para o nome do arquivo.
+  final String ip = socket.getInetAddress().getHostAddress();
+  final String hostName = socket.getInetAddress().getHostName();
+
 
 	String raiz1 = "/home/mateus/Documents/Redes/parte2/html";	//String para o diretorio raiz (localhost).
 	String raiz2 = "/home/mateus/Documents/Redes/parte2/html1";	//String para o diretorio raiz (127.0.0.1).
@@ -29,10 +35,18 @@ public class ConexaoWeb {
 	String senha_user = "";	//String para armazenar o nome e a senha do usuario
 	Date now = new Date();
 	DataOutputStream os = null;
+  DataOutputStream log = null;
 	BufferedReader in = null;
 
 	Boolean erro = false;
 	Boolean autorizado = true;
+
+  try {
+    log = new DataOutputStream(new FileOutputStream("WebLog.txt",true));
+  }
+  catch (IOException e) {
+    System.out.println(e.getMessage());
+  }
 
 	try {
 	    in = new BufferedReader(new
@@ -73,7 +87,9 @@ public class ConexaoWeb {
 			}
 		    }
 
-		    System.out.println(str);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM/YYYY:HH:mm:ss -SSSS");
+		    log.writeBytes(ip + " "+ hostName +" - ["+sdf.format(date)+"]'"+str+"' "+(str.getBytes()).length+"\n");
 		}
     System.out.println();
 
@@ -138,6 +154,8 @@ public class ConexaoWeb {
 	//Fecha o socket.
 	try {
 	    socket.close();
+      if (log != null)
+        log.close();
 	}
 	catch(IOException e) {
 	    System.out.println(e.getMessage());
