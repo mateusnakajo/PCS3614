@@ -1,6 +1,8 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.nio.charset.StandardCharsets;
+
 
 public class ConexaoWeb {
   Socket socket; 					//socket que vai tratar com o cliente.
@@ -19,66 +21,80 @@ public class ConexaoWeb {
     String ct; 					//String que guarda o tipo de arquivo: text/html;image/gif....
     String versao = ""; 			//String que guarda a versao do Protocolo.
     File arquivo; 				//Objeto para os arquivos que vao ser enviados. 
-    String NomeArq; 				//String para o nome do arquivo.
-    String raiz = "."; 				//String para o diretorio raiz.
-	String inicio;				//String para guardar o inicio da linha
-	String senha_user="";		//String para armazenar o nome e a senha do usuario
-	Date now = new Date();
-		
+    String nomeArq; 				//String para o nome do arquivo.
+    String raiz = "/home/mateus/Documents/Redes/Trabalho1/PCS3614/parte2/html"; 				//String para o diretorio raiz.
+  	String inicio;				//String para guardar o inicio da linha
+  	String senha_user="";		//String para armazenar o nome e a senha do usuario
+  	Date now = new Date();
+    DataOutputStream os = null;
+    BufferedReader in = null;
+    Boolean erro = false;
+
     try {
+      in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+      os = new DataOutputStream(this.socket.getOutputStream());
+      String linha = in.readLine();
+      StringTokenizer st = new StringTokenizer(linha);
+      metodo = st.nextToken();
+      nomeArq = st.nextToken();
+      versao = st.nextToken();
 
-		//Coloque aqui o acesso aos streams do socket!
-		BufferedReader in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-        DataOutputStream os = new DataOutputStream(this.socket.getOutputStream());
-		
-		//Coloque aqui o procedimento para ler toda a mensagem do cliente. Imprima na tela com System.out.println()!
-        
-        os.writeBytes("HTTP/1.0 200 OK\n");
-        os.writeBytes("Server: LocalHost\n");
-        os.writeBytes("MIME-version: 1.0\n");
-        os.writeBytes("Content-type: text/html\n");
-        os.writeBytes("Content-lenght: 38\n\n");
-		os.writeBytes("<HTML><H1>ISTO E UM TESTE</H1></HTML>");
+      if(metodo.equals("GET")) {
+        if(nomeArq.endsWith("/")) {
+          nomeArq += "index.html";
+        }
 
-		String str;
-        while ((str = in.readLine()) != null && !str.equals("")) {
-        	System.out.println(str);
-		}
-		
-			/* Para a segunda parte, ignore para a primeira!
-  			// Enviar o arquivo
-			try {			
-			
-			
-			//Crie aqui o objeto do tipo File
-			
-			//agora faca a leitura do arquivo.
+        ct = TipoArquivo(nomeArq);
+        try{
+          arquivo = new File(raiz,nomeArq.substring(1,nomeArq.length()));
+          FileInputStream fis = new FileInputStream(arquivo);
 
-			//Mande aqui a mensagem para o cliente.
-			
-			}
-			//este catch e para o caso do arquivo nao existir. Mande para o browser uma mensagem de not found, e um texto html!
-			catch(IOException e)
-			{
-				
-			}   
-			*/
-		
-	}
-	catch(IOException e)
-	{
-		System.out.println(e.getMessage());
-	}
-	
-    //Fecha o socket.
+          byte[] dado = new byte[(int) arquivo.length()];
+          fis.read(dado);
+          String dadoString = new String(dado, StandardCharsets.UTF_8);
+
+          System.out.println("Método: "+metodo);
+          System.out.println("Nome arquivo: "+nomeArq);
+          System.out.println("Versao: "+versao);
+
+          os.writeBytes("HTTP/1.0 200 OK\n");
+          os.writeBytes("Server: LocalHost\n");
+          os.writeBytes("MIME-version: 1.0\n");
+          os.writeBytes("Content-type: text/html\n");
+          os.writeBytes("Content-lenght: "+dadoString.length()+"\n\n");
+          os.writeBytes(dadoString);
+          
+      		String str;
+              while ((str = in.readLine()) != null && !str.equals("")) {
+              	System.out.println(str);
+      		}
+        } 
+        catch(IOException e1) {
+          try{
+            String dadoString = "Error 404: file not found";
+            os.writeBytes("HTTP/1.0 404 NOT FOUND\n");
+            os.writeBytes("Server: LocalHost\n");
+            os.writeBytes("MIME-version: 1.0\n");
+            os.writeBytes("Content-type: text/html\n");
+            os.writeBytes("Content-lenght: "+dadoString.length()+"\n\n");
+            os.writeBytes(dadoString);
+            } catch (IOException e2){}
+        } 		
+    	}
+    }
+    catch(IOException e)
+    	{
+        System.out.println("ERRO");
+    	}
+  	
+      //Fecha o socket.
     try {
       socket.close();
     }
     catch(IOException e) {
-    	System.out.println(e.getMessage());
-
+     	System.out.println(e.getMessage());
     }
-  }
+}
 
 //Funcao que retorna o tipo do arquivo.
 
