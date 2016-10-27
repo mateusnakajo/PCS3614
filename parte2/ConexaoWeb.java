@@ -6,8 +6,11 @@ public class ConexaoWeb {
   Socket socket; 					//socket que vai tratar com o cliente.
   static String arqi = "index.html"; 	//se nao for passado um arquivo, o servidor fornecera a pagina index.html
 
-  //coloque aqui o construtor
-  
+  public ConexaoWeb(Socket s) {
+    this.socket = s;
+    System.out.println("Cliente conectado do IP "+this.socket.getInetAddress().getHostAddress());
+
+  }  
 
   //metodo TrataConexao, aqui serao trocadas informacoes com o Browser...
 
@@ -25,13 +28,26 @@ public class ConexaoWeb {
     try {
 
 		//Coloque aqui o acesso aos streams do socket!
+		BufferedReader in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+        DataOutputStream os = new DataOutputStream(this.socket.getOutputStream());
 		
 		//Coloque aqui o procedimento para ler toda a mensagem do cliente. Imprima na tela com System.out.println()!
+        
+        os.writeBytes("HTTP/1.0 200 OK\n");
+        os.writeBytes("Server: LocalHost\n");
+        os.writeBytes("MIME-version: 1.0\n");
+        os.writeBytes("Content-type: text/html\n");
+        os.writeBytes("Content-lenght: 38\n\n");
+		os.writeBytes("<HTML><H1>ISTO E UM TESTE</H1></HTML>");
+
+		String str;
+        while ((str = in.readLine()) != null && !str.equals("")) {
+        	System.out.println(str);
+		}
 		
 			/* Para a segunda parte, ignore para a primeira!
   			// Enviar o arquivo
-			try {
-				
+			try {			
 			
 			
 			//Crie aqui o objeto do tipo File
@@ -51,6 +67,7 @@ public class ConexaoWeb {
 	}
 	catch(IOException e)
 	{
+		System.out.println(e.getMessage());
 	}
 	
     //Fecha o socket.
@@ -58,6 +75,8 @@ public class ConexaoWeb {
       socket.close();
     }
     catch(IOException e) {
+    	System.out.println(e.getMessage());
+
     }
   }
 
@@ -72,14 +91,3 @@ public class ConexaoWeb {
     else return "text/plain";
   }
 }
-		
-
-
-
-
-
-
-
-
-
-
